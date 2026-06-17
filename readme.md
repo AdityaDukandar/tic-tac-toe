@@ -35,4 +35,6 @@ Simply open the `index.html` file in any modern web browser to play!
 
 No compilers, local servers, or package installations are required—it is written in clean, modern vanilla ES6 JavaScript, HTML5, and CSS3.
 
+# Play tic tac toe online at this website : https://tic-tac-toe-xox-play.vercel.app/
+
 *Secure Arcade Deployment &copy; 2026 // Made with pixelated love.*
