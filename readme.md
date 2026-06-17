@@ -27,15 +27,6 @@ Designed to run beautifully in any browser, it includes an unbeatable **Minimax 
 
 This repository is pre-configured for instant static hosting on **Vercel** with a clean URL routing and custom secure headers configured in `vercel.json`.
 
-### Deploying using Vercel CLI:
-```bash
-# Install Vercel CLI globally (if not installed)
-npm install -g vercel
-
-# Deploy instantly
-vercel
-```
-
 ---
 
 ## 💻 Running Locally
@@ -43,15 +34,5 @@ vercel
 Simply open the `index.html` file in any modern web browser to play! 
 
 No compilers, local servers, or package installations are required—it is written in clean, modern vanilla ES6 JavaScript, HTML5, and CSS3.
-
-```bash
-# Clone the repository
-git clone <your-repository-url>
-
-# Open in browser
-open index.html
-```
-
----
 
 *Secure Arcade Deployment &copy; 2026 // Made with pixelated love.*
