@@ -599,7 +599,8 @@ class GameEngine {
         this.turn = "X";
         this.gameOver = false;
         this.aiThinking = false;
-        this.totalMoves = 0;
+        // totalMoves intentionally NOT reset here — it accumulates across rounds
+        // within a match so the LIMITED input budget is actually enforced.
         this.winningLine = null;
         this.particles = [];
         this.triggerScreenShake(5);
