@@ -317,6 +317,9 @@ class GameEngine {
         this.scores = { X: 0, O: 0, draws: 0 };
         this.gameOver = false;
         this.aiThinking = false;
+        this.inputMode = "limited"; // 'limited' or 'infinite'
+        this.moveLimit = 27; // total inputs allowed in limited mode
+        this.totalMoves = 0; // inputs used in current match
 
         // Visual effects state
         this.particles = [];
@@ -435,6 +438,27 @@ class GameEngine {
             });
         });
 
+        // Input mode selectors (LIMITED vs INFINITE)
+        const limitedBtn = document.getElementById("input-mode-limited");
+        const infiniteBtn = document.getElementById("input-mode-infinite");
+        const inputDesc = document.getElementById("input-mode-desc");
+
+        limitedBtn.addEventListener("click", () => {
+            limitedBtn.classList.add("active");
+            infiniteBtn.classList.remove("active");
+            this.inputMode = "limited";
+            inputDesc.textContent = "LIMITED: 27 total inputs per match. INFINITE: endless play.";
+            inputDesc.className = "difficulty-desc text-green";
+        });
+
+        infiniteBtn.addEventListener("click", () => {
+            infiniteBtn.classList.add("active");
+            limitedBtn.classList.remove("active");
+            this.inputMode = "infinite";
+            inputDesc.textContent = "INFINITE: unlimited inputs, endless rounds. Scores keep compounding.";
+            inputDesc.className = "difficulty-desc text-yellow";
+        });
+
         // Character Select Card Toggles
         document.querySelectorAll(".char-card").forEach(card => {
             card.addEventListener("click", () => {
@@ -533,6 +557,9 @@ class GameEngine {
         document.getElementById("p1-score").textContent = "00";
         document.getElementById("p2-score").textContent = "00";
 
+        // Reset input counter for the new match
+        this.totalMoves = 0;
+
         // Setup portraits inside scores
         this.renderFighterScoreAvatars();
 
@@ -572,6 +599,7 @@ class GameEngine {
         this.turn = "X";
         this.gameOver = false;
         this.aiThinking = false;
+        this.totalMoves = 0;
         this.winningLine = null;
         this.particles = [];
         this.triggerScreenShake(5);
@@ -586,9 +614,16 @@ class GameEngine {
         line.textContent = `> ${text}`;
         term.appendChild(line);
 
-        // Keep last 6 lines
-        while (term.children.length > 6) {
-            term.removeChild(term.firstChild);
+        // Keep last 15 lines; old inputs fade out slowly instead of vanishing instantly
+        const MAX_LINES = 15;
+        while (term.children.length > MAX_LINES) {
+            const old = term.firstChild;
+            old.style.opacity = "0";
+            setTimeout(() => {
+                if (old.parentNode === term) {
+                    term.removeChild(old);
+                }
+            }, 700);
         }
     }
 
@@ -882,6 +917,9 @@ class GameEngine {
         // 1. Assign move
         const playerMark = this.turn;
         this.board[idx] = playerMark;
+
+        // Count this input toward the match limit
+        this.totalMoves++;
         
         // 2. Spawn dynamic burst particles
         const cellW = this.canvas.width / 3;
@@ -908,6 +946,12 @@ class GameEngine {
 
         // 3. Check for Win/Draw
         if (this.checkGameOver()) return;
+
+        // Input limit reached (limited mode only) — match ends, inputs exhausted
+        if (this.inputMode === "limited" && this.totalMoves >= this.moveLimit) {
+            this.handleInputsExhausted();
+            return;
+        }
 
         // 4. Toggle turn
         this.turn = this.turn === "X" ? "O" : "X";
@@ -999,6 +1043,17 @@ class GameEngine {
         }, 500);
     }
 
+    handleInputsExhausted() {
+        this.gameOver = true;
+        Audio.playExplode();
+        this.triggerScreenShake(15);
+        this.logToTerminal(`INPUT BUDGET EXHAUSTED (${this.totalMoves}/${this.moveLimit}). MATCH HALTED.`, "red");
+
+        setTimeout(() => {
+            this.showGameOverModal("INPUTS");
+        }, 600);
+    }
+
     showGameOverModal(winner) {
         const overlay = document.getElementById("game-over-overlay");
         const title = document.getElementById("victory-title");
@@ -1015,6 +1070,14 @@ class GameEngine {
             winAvatar.innerHTML = "";
             winAvatar.style.borderColor = "#999";
             winAvatar.style.backgroundColor = "#222";
+        } else if (winner === "INPUTS") {
+            title.textContent = "INPUTS EXHAUSTED";
+            title.setAttribute("data-text", "INPUTS EXHAUSTED");
+            title.className = "victory-glitch-text text-red";
+            desc.textContent = `INPUT BUDGET DEPLETED (${this.totalMoves}/${this.moveLimit}). LIMITED MODE MATCH ENDED.`;
+            winAvatar.innerHTML = "";
+            winAvatar.style.borderColor = "#ff0055";
+            winAvatar.style.backgroundColor = "#000";
         } else {
             const isP1 = winner === "P1";
             const char = isP1 ? CHARACTERS[this.p1CharId] : CHARACTERS[this.p2CharId];
